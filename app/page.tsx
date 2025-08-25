@@ -1,5 +1,5 @@
 import { getPosts } from "@/app/actions/posts";
-import { PostManager } from "@/app/components/post-manager";
+import { PostManager } from "@/app/_components/post-manager";
 
 export default async function Home() {
   const posts = await getPosts();
