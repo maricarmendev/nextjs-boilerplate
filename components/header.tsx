@@ -2,8 +2,7 @@
 
 import Link from 'next/link'
 import React from 'react'
-import { LoginDialog } from './auth/login-dialog'
-import { RegisterDialog } from './auth/register-dialog'
+import { Button } from './ui/button'
 import { UserMenu } from './auth/user-menu'
 import { useSession } from '@/lib/auth-client'
 
@@ -22,8 +21,12 @@ export const Header = () => {
             <UserMenu />
           ) : (
             <>
-              <LoginDialog />
-              <RegisterDialog />
+              <Button asChild>
+                <Link href="/login">Login</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/register">Register</Link>
+              </Button>
             </>
           )}
         </div>
