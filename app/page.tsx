@@ -1,5 +1,6 @@
 import { getPosts } from "@/lib/actions/posts";
-import { PostManager } from "@/app/_components/post-manager";
+import { PostFormDialog } from "@/components/post/post-form-dialog";
+import { PostList } from "@/components/post/post-list";
 
 export default async function Home() {
   const posts = await getPosts();
@@ -7,7 +8,10 @@ export default async function Home() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <h1 className="text-3xl font-bold mb-8">Posts CRUD with Next.js 15</h1>
-      <PostManager initialPosts={posts} />
+      <div className="space-y-6">
+        <PostFormDialog />
+        <PostList posts={posts} />
+      </div>
     </div>
   );
 }

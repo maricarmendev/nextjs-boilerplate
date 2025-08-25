@@ -3,7 +3,8 @@
 import { deletePost } from "@/lib/actions/posts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trash2, Edit } from "lucide-react";
+import { PostFormDialog } from "./post-form-dialog";
+import { Trash2 } from "lucide-react";
 import { useState, useTransition } from "react";
 
 interface Post {
@@ -16,10 +17,9 @@ interface Post {
 
 interface PostListProps {
   posts: Post[];
-  onEdit: (post: Post) => void;
 }
 
-export function PostList({ posts, onEdit }: PostListProps) {
+export function PostList({ posts }: PostListProps) {
   const [isPending, startTransition] = useTransition();
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
@@ -49,14 +49,7 @@ export function PostList({ posts, onEdit }: PostListProps) {
             <CardTitle className="flex justify-between items-start">
               <span className="pr-8">{post.title}</span>
               <div className="flex gap-2">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => onEdit(post)}
-                  disabled={isPending}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
+                <PostFormDialog post={post} />
                 <Button
                   size="icon"
                   variant="ghost"
