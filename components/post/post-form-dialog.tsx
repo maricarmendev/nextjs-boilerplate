@@ -14,11 +14,13 @@ import {
 } from "@/components/ui/dialog";
 import { useActionState, useState } from "react";
 import { Plus, Edit } from "lucide-react";
+import { useSession } from "@/lib/auth-client";
 
 interface Post {
   id: number;
   title: string;
   content: string | null;
+  userId: string;
 }
 
 interface PostFormDialogProps {
@@ -29,6 +31,7 @@ interface PostFormDialogProps {
 
 export function PostFormDialog({ post, trigger, onSuccess }: PostFormDialogProps) {
   const [open, setOpen] = useState(false);
+  const { data: session } = useSession();
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(
     async (prevState: ActionState, formData: FormData) => {
       const result = await (post ? updatePost : createPost)(prevState, formData);
@@ -40,6 +43,20 @@ export function PostFormDialog({ post, trigger, onSuccess }: PostFormDialogProps
     },
     null
   );
+
+  // Only show create button if logged in
+  if (!session?.user && !post) {
+    return (
+      <div className="text-muted-foreground">
+          Login to create posts
+      </div>
+    );
+  }
+
+  // Only show edit button if user owns the post
+  if (post && session?.user && post.userId !== session.user.id) {
+    return null;
+  }
 
   const defaultTrigger = (
     <Button className={post ? "h-8 w-8 p-0" : "w-full sm:w-auto"} variant={post ? "ghost" : "default"}>
@@ -76,7 +93,7 @@ export function PostFormDialog({ post, trigger, onSuccess }: PostFormDialogProps
               disabled={isPending}
             />
             {state?.error && typeof state.error === "object" && state.error.title && (
-              <p className="text-sm text-red-500">{state.error.title}</p>
+              <p className="text-sm text-danger-500">{state.error.title}</p>
             )}
           </div>
 
@@ -90,12 +107,12 @@ export function PostFormDialog({ post, trigger, onSuccess }: PostFormDialogProps
               disabled={isPending}
             />
             {state?.error && typeof state.error === "object" && state.error.content && (
-              <p className="text-sm text-red-500">{state.error.content}</p>
+              <p className="text-sm text-danger-500">{state.error.content}</p>
             )}
           </div>
 
           {state?.error && typeof state.error === "string" && (
-            <p className="text-sm text-red-500">{state.error}</p>
+            <p className="text-sm text-danger-500">{state.error}</p>
           )}
 
           <div className="flex gap-2 pt-2">
