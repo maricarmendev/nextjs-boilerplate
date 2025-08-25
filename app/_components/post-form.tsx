@@ -1,6 +1,6 @@
 "use client";
 
-import { createPost, updatePost, type ActionState } from "@/app/actions/posts";
+import { createPost, updatePost, type ActionState } from "@/lib/actions/posts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

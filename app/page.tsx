@@ -1,4 +1,4 @@
-import { getPosts } from "@/app/actions/posts";
+import { getPosts } from "@/lib/actions/posts";
 import { PostManager } from "@/app/_components/post-manager";
 
 export default async function Home() {

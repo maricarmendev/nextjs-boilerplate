@@ -1,6 +1,6 @@
 "use client";
 
-import { deletePost } from "@/app/actions/posts";
+import { deletePost } from "@/lib/actions/posts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trash2, Edit } from "lucide-react";
