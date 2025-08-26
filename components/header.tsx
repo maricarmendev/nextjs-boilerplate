@@ -18,7 +18,14 @@ export const Header = () => {
 
         <div className="flex gap-2 items-center">
           {session?.user ? (
-            <UserMenu />
+            <>
+              {session.user.role === "admin" && (
+                <Link href="/admin" className="text-sm text-muted-foreground">
+                  Admin
+                </Link>
+              )}
+              <UserMenu />
+            </>
           ) : (
             <>
               <Button asChild>

@@ -1,9 +1,8 @@
-import React from 'react'
-
-const AdminPage = () => {
+export default function AdminPage() {
   return (
-    <div>AdminPage</div>
+    <div>
+      <h1>Panel de Administración</h1>
+      <p>Solo usuarios con rol admin pueden ver esta página.</p>
+    </div>
   )
 }
-
-export default AdminPage
