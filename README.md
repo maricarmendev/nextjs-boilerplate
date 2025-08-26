@@ -24,6 +24,7 @@ A modern Next.js 15 boilerplate with authentication and CRUD functionality.
    GOOGLE_CLIENT_ID="your-google-client-id"
    GOOGLE_CLIENT_SECRET="your-google-client-secret"
    BETTER_AUTH_SECRET="your-secret-key"
+   BETTER_AUTH_URL="http://localhost:3000"
    ```
 
 3. **Start database**
