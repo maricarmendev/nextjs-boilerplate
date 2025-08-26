@@ -1,10 +1,11 @@
 "use client";
 
-import Link from 'next/link'
-import React from 'react'
-import { Button } from './ui/button'
-import { UserMenu } from './auth/user-menu'
-import { useSession } from '@/lib/auth-client'
+import Link from "next/link";
+import React from "react";
+import { Button } from "./ui/button";
+import { UserMenu } from "./auth/user-menu";
+import { useSession } from "@/lib/auth-client";
+import { ThemeToggle } from "./theme-toggle";
 
 export const Header = () => {
   const { data: session } = useSession();
@@ -17,28 +18,26 @@ export const Header = () => {
         </Link>
 
         <div className="flex gap-2 items-center">
+
+          {session?.user?.role === "admin" && (
+            <Button variant="outline" asChild>
+              <Link href="/admin">Admin</Link>
+            </Button>
+          )}
+          
+          <ThemeToggle />
+
           {session?.user ? (
-            <>
-              {session.user.role === "admin" && (
-                <Link href="/admin" className="text-sm text-muted-foreground">
-                  Admin
-                </Link>
-              )}
-              <UserMenu />
-            </>
+            <UserMenu />
           ) : (
             <>
               <Button asChild>
                 <Link href="/login">Login</Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link href="/register">Register</Link>
               </Button>
             </>
           )}
         </div>
       </div>
     </div>
-  )
-}
-
+  );
+};
