@@ -26,6 +26,7 @@ import {
 import { useState } from "react";
 import { Plus, Edit } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 
 interface Post {
   id: number;
@@ -160,7 +161,10 @@ export function PostFormDialog({ post, trigger, onSuccess }: PostFormDialogProps
             />
 
             {error && (
-              <p className="text-sm text-red-500">{error}</p>
+              <Alert variant="destructive">
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
 
             <div className="flex gap-2 pt-2">
