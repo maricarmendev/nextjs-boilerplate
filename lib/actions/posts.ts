@@ -13,7 +13,7 @@ export type ActionState = {
   success?: boolean;
 } | null;
 
-export async function createPost(prevState: ActionState, formData: FormData): Promise<ActionState> {
+export async function createPost(formData: FormData): Promise<ActionState> {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -51,7 +51,7 @@ export async function createPost(prevState: ActionState, formData: FormData): Pr
   }
 }
 
-export async function updatePost(prevState: ActionState, formData: FormData): Promise<ActionState> {
+export async function updatePost(formData: FormData): Promise<ActionState> {
   const session = await auth.api.getSession({
     headers: await headers(),
   });

@@ -1,6 +1,6 @@
 "use client";
 
-import { createPost, updatePost, type ActionState } from "@/lib/actions/posts";
+import { createPost, updatePost } from "@/lib/actions/posts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -70,7 +70,7 @@ export function PostFormDialog({ post, trigger, onSuccess }: PostFormDialogProps
     }
 
     try {
-      const result = await (post ? updatePost : createPost)(null, formData);
+      const result = await (post ? updatePost : createPost)(formData);
       if (result?.success) {
         setOpen(false);
         onSuccess?.();
