@@ -7,20 +7,19 @@ import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import type { ActionResponse } from "@/types";
 
-export type ActionState = {
-  error?: string | { [key: string]: string[] };
-  success?: boolean;
-} | null;
-
-export async function createPost(formData: FormData): Promise<ActionState> {
+export async function createPost(formData: FormData): Promise<ActionResponse<{ id: number }>> {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
   if (!session?.user) {
     return {
-      error: "You must be logged in to create posts",
+      success: false,
+      error: {
+        message: "You must be logged in to create posts",
+      },
     };
   }
 
@@ -31,34 +30,47 @@ export async function createPost(formData: FormData): Promise<ActionState> {
 
   if (!validatedFields.success) {
     return {
-      error: validatedFields.error.flatten().fieldErrors,
+      success: false,
+      error: {
+        message: "Validation failed",
+        details: validatedFields.error.flatten().fieldErrors,
+      },
     };
   }
 
   try {
-    await db.insert(posts).values({
+    const [newPost] = await db.insert(posts).values({
       title: validatedFields.data.title,
       content: validatedFields.data.content,
       userId: session.user.id,
-    });
+    }).returning({ id: posts.id });
 
     revalidatePath("/");
-    return { success: true };
+    return { 
+      success: true,
+      data: { id: newPost.id }
+    };
   } catch (error) {
     return {
-      error: "Failed to create post",
+      success: false,
+      error: {
+        message: "Failed to create post",
+      },
     };
   }
 }
 
-export async function updatePost(formData: FormData): Promise<ActionState> {
+export async function updatePost(formData: FormData): Promise<ActionResponse> {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
   if (!session?.user) {
     return {
-      error: "You must be logged in to update posts",
+      success: false,
+      error: {
+        message: "You must be logged in to update posts",
+      },
     };
   }
 
@@ -70,13 +82,17 @@ export async function updatePost(formData: FormData): Promise<ActionState> {
 
   if (!validatedFields.success) {
     return {
-      error: validatedFields.error.flatten().fieldErrors,
+      success: false,
+      error: {
+        message: "Validation failed",
+        details: validatedFields.error.flatten().fieldErrors,
+      },
     };
   }
 
   try {
     // Only update if the post belongs to the current user
-    const result = await db
+    await db
       .update(posts)
       .set({
         title: validatedFields.data.title,
@@ -92,19 +108,25 @@ export async function updatePost(formData: FormData): Promise<ActionState> {
     return { success: true };
   } catch (error) {
     return {
-      error: "Failed to update post",
+      success: false,
+      error: {
+        message: "Failed to update post",
+      },
     };
   }
 }
 
-export async function deletePost(id: number) {
+export async function deletePost(id: number): Promise<ActionResponse> {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
   if (!session?.user) {
     return {
-      error: "You must be logged in to delete posts",
+      success: false,
+      error: {
+        message: "You must be logged in to delete posts",
+      },
     };
   }
 
@@ -118,7 +140,10 @@ export async function deletePost(id: number) {
     return { success: true };
   } catch (error) {
     return {
-      error: "Failed to delete post",
+      success: false,
+      error: {
+        message: "Failed to delete post",
+      },
     };
   }
 }

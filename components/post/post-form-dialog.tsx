@@ -1,6 +1,7 @@
 "use client";
 
 import { createPost, updatePost } from "@/lib/actions/posts";
+import type { ActionResponse } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -71,12 +72,12 @@ export function PostFormDialog({ post, trigger, onSuccess }: PostFormDialogProps
 
     try {
       const result = await (post ? updatePost : createPost)(formData);
-      if (result?.success) {
+      if (result.success) {
         setOpen(false);
         onSuccess?.();
         form.reset();
-      } else if (result?.error) {
-        setError(typeof result.error === "string" ? result.error : "An error occurred");
+      } else if (result.error) {
+        setError(result.error.message);
       }
     } catch (err) {
       setError("An error occurred");
