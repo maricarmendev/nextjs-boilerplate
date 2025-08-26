@@ -7,7 +7,14 @@ import { z } from "zod";
 import { signIn } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { GoogleAuthButton } from "./google-auth-button";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -27,12 +34,12 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const [error, setError] = useState("");
   const router = useRouter();
   
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginFormData>({
+  const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
   });
 
   const onSubmit = async (data: LoginFormData) => {
@@ -60,43 +67,55 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="you@example.com"
-            disabled={isSubmitting}
-            {...register("email")}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="you@example.com"
+                    disabled={form.formState.isSubmitting}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          {errors.email && (
-            <p className="text-sm text-red-500">{errors.email.message}</p>
-          )}
-        </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="••••••••"
-            disabled={isSubmitting}
-            {...register("password")}
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    disabled={form.formState.isSubmitting}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          {errors.password && (
-            <p className="text-sm text-red-500">{errors.password.message}</p>
+
+          {error && (
+            <p className="text-sm text-red-500">{error}</p>
           )}
-        </div>
 
-        {error && (
-          <p className="text-sm text-red-500">{error}</p>
-        )}
-
-        <Button type="submit" disabled={isSubmitting} className="w-full">
-          {isSubmitting ? "Logging in..." : "Login"}
-        </Button>
-      </form>
+          <Button type="submit" disabled={form.formState.isSubmitting} className="w-full">
+            {form.formState.isSubmitting ? "Logging in..." : "Login"}
+          </Button>
+        </form>
+      </Form>
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">

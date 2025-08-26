@@ -3,8 +3,18 @@
 import { createPost, updatePost, type ActionState } from "@/lib/actions/posts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { Plus, Edit } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
 
@@ -23,6 +33,13 @@ interface Post {
   userId: string;
 }
 
+const postSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  content: z.string().optional(),
+});
+
+type PostFormData = z.infer<typeof postSchema>;
+
 interface PostFormDialogProps {
   post?: Post;
   trigger?: React.ReactNode;
@@ -31,18 +48,40 @@ interface PostFormDialogProps {
 
 export function PostFormDialog({ post, trigger, onSuccess }: PostFormDialogProps) {
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState("");
   const { data: session } = useSession();
-  const [state, formAction, isPending] = useActionState<ActionState, FormData>(
-    async (prevState: ActionState, formData: FormData) => {
-      const result = await (post ? updatePost : createPost)(prevState, formData);
+  
+  const form = useForm<PostFormData>({
+    resolver: zodResolver(postSchema),
+    defaultValues: {
+      title: post?.title || "",
+      content: post?.content || "",
+    },
+  });
+
+  const onSubmit = async (data: PostFormData) => {
+    setError("");
+    
+    const formData = new FormData();
+    formData.append("title", data.title);
+    formData.append("content", data.content || "");
+    if (post) {
+      formData.append("id", post.id.toString());
+    }
+
+    try {
+      const result = await (post ? updatePost : createPost)(null, formData);
       if (result?.success) {
         setOpen(false);
         onSuccess?.();
+        form.reset();
+      } else if (result?.error) {
+        setError(typeof result.error === "string" ? result.error : "An error occurred");
       }
-      return result;
-    },
-    null
-  );
+    } catch (err) {
+      setError("An error occurred");
+    }
+  };
 
   // Only show create button if logged in
   if (!session?.user && !post) {
@@ -80,56 +119,65 @@ export function PostFormDialog({ post, trigger, onSuccess }: PostFormDialogProps
         <DialogHeader>
           <DialogTitle>{post ? "Edit Post" : "Create New Post"}</DialogTitle>
         </DialogHeader>
-        <form action={formAction} className="space-y-4">
-          {post && <input type="hidden" name="id" value={post.id} />}
-          
-          <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
-            <Input
-              id="title"
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
               name="title"
-              defaultValue={post?.title}
-              required
-              disabled={isPending}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter post title"
+                      disabled={form.formState.isSubmitting}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            {state?.error && typeof state.error === "object" && state.error.title && (
-              <p className="text-sm text-danger-500">{state.error.title}</p>
-            )}
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="content">Content</Label>
-            <Textarea
-              id="content"
+            <FormField
+              control={form.control}
               name="content"
-              defaultValue={post?.content || ""}
-              rows={4}
-              disabled={isPending}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Content</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Write your post content..."
+                      rows={4}
+                      disabled={form.formState.isSubmitting}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            {state?.error && typeof state.error === "object" && state.error.content && (
-              <p className="text-sm text-danger-500">{state.error.content}</p>
+
+            {error && (
+              <p className="text-sm text-red-500">{error}</p>
             )}
-          </div>
 
-          {state?.error && typeof state.error === "string" && (
-            <p className="text-sm text-danger-500">{state.error}</p>
-          )}
-
-          <div className="flex gap-2 pt-2">
-            <Button type="submit" disabled={isPending} className="flex-1">
-              {isPending ? "Saving..." : post ? "Update Post" : "Create Post"}
-            </Button>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => setOpen(false)}
-              disabled={isPending}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-          </div>
-        </form>
+            <div className="flex gap-2 pt-2">
+              <Button type="submit" disabled={form.formState.isSubmitting} className="flex-1">
+                {form.formState.isSubmitting ? "Saving..." : post ? "Update Post" : "Create Post"}
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setOpen(false)}
+                disabled={form.formState.isSubmitting}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
