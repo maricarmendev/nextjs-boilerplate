@@ -72,7 +72,7 @@ export async function suscribeToPushNotifications(registration: ServiceWorkerReg
     // Crea una suscripción única para este usuario/navegador
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true, // Las notificaciones siempre deben de ser visibles al usuario
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY).buffer as ArrayBuffer
     })
 
     console.log('Suscripción creada:', subscription);
