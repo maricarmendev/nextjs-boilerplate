@@ -1,25 +1,51 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
+
+type NotificationState = {
+  permission: NotificationPermission;
+  isSubscribed: boolean;
+  isLoading: boolean;
+  error: string | null;
+};
 
 export function usePushNotifications() {
-  const [permission, setPermission] = useState<NotificationPermission>('default');
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [state, setState] = useState<NotificationState>({
+    permission: "default",
+    isSubscribed: false,
+    isLoading: false,
+    error: null,
+  });
 
   const checkStatus = useCallback(async () => {
-    if ('Notification' in window) {
-      setPermission(Notification.permission);
+    if (!("Notification" in window)) {
+      setState((prev) => ({
+        ...prev,
+        error: "Tu navegador no soporta notificaciones",
+      }));
+      return;
     }
 
+    const permission = Notification.permission;
+    
     try {
       const registration = await navigator?.serviceWorker?.getRegistration();
-      if (registration) {
-        const subscription = await registration.pushManager.getSubscription();
-        setIsSubscribed(!!subscription);
-      }
+      const subscription = registration
+        ? await registration.pushManager.getSubscription()
+        : null;
+
+      setState((prev) => ({
+        ...prev,
+        permission,
+        isSubscribed: !!subscription,
+        error: null,
+      }));
     } catch (error) {
-      console.error('Error verificando estado:', error);
+      setState((prev) => ({
+        ...prev,
+        permission,
+        error: "Error verificando estado de notificaciones",
+      }));
     }
   }, []);
 
@@ -27,12 +53,23 @@ export function usePushNotifications() {
     checkStatus();
   }, [checkStatus]);
 
+  const setLoading = (isLoading: boolean) => {
+    setState((prev) => ({ ...prev, isLoading }));
+  };
+
+  const setSubscribed = (isSubscribed: boolean) => {
+    setState((prev) => ({ ...prev, isSubscribed }));
+  };
+
+  const setError = (error: string | null) => {
+    setState((prev) => ({ ...prev, error }));
+  };
+
   return {
-    permission,
-    isSubscribed,
-    isLoading,
-    setIsLoading,
-    setIsSubscribed,
+    ...state,
+    setLoading,
+    setSubscribed,
+    setError,
     checkStatus,
   };
 }

@@ -1,10 +1,15 @@
-// lib/web-push.ts
 import webpush from 'web-push';
+import { NOTIFICATION_CONFIG, validateNotificationConfig } from '@/lib/config/notifications';
+
+// Validar configuración al inicializar
+if (!validateNotificationConfig()) {
+  throw new Error('Configuración de notificaciones inválida');
+}
 
 webpush.setVapidDetails(
-  'mailto:tu-email@ejemplo.com',
-  process.env.VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
+  `mailto:${NOTIFICATION_CONFIG.vapid.email}`,
+  NOTIFICATION_CONFIG.vapid.publicKey,
+  NOTIFICATION_CONFIG.vapid.privateKey
 );
 
 export interface PushPayload {
@@ -24,23 +29,27 @@ export async function sendPushNotification(
   },
   payload: PushPayload
 ) {
-  try {
-    const pushSubscription = {
-      endpoint: subscription.endpoint,
-      keys: {
-        p256dh: subscription.p256dh,
-        auth: subscription.auth,
-      },
-    };
+  const pushSubscription = {
+    endpoint: subscription.endpoint,
+    keys: {
+      p256dh: subscription.p256dh,
+      auth: subscription.auth,
+    },
+  };
 
+  try {
     const result = await webpush.sendNotification(
       pushSubscription,
-      JSON.stringify(payload)
+      JSON.stringify({
+        ...payload,
+        icon: payload.icon || NOTIFICATION_CONFIG.icons.default,
+        badge: payload.badge || NOTIFICATION_CONFIG.icons.badge,
+      })
     );
 
     return result;
   } catch (error) {
-    console.error('Error enviando notificación:', error);
+    console.error('Error enviando notificación push:', error);
     throw error;
   }
 }

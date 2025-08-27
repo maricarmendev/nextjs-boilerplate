@@ -1,34 +1,36 @@
 'use client';
 
 import { useState } from 'react';
-import { SendNotificationData, sendNotification } from '@/lib/actions/send-notification';
+import { sendNotification } from '@/lib/actions/send-notification';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { toast } from 'sonner';
 
 export function NotificationAdmin() {
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<SendNotificationData | null>(null);
   
   const handleSubmit = async (formData: FormData) => {
     setIsLoading(true);
-    setError(null);
-    setResult(null);
     
-    const response = await sendNotification(formData);
-    
-    if (!response.success) {
-      setError(response.error?.message || 'Error al enviar notificación');
+    try {
+      const response = await sendNotification(formData);
+      
+      if (response.success) {
+        const sent = response.data?.sent || 0;
+        toast.success(`Notificación enviada exitosamente a ${sent} usuario${sent !== 1 ? 's' : ''}`);
+        // Limpiar formulario
+        (document.getElementById('notification-form') as HTMLFormElement)?.reset();
+      } else {
+        toast.error(response.error?.message || 'Error al enviar notificación');
+      }
+    } catch {
+      toast.error('Error inesperado al enviar notificación');
+    } finally {
       setIsLoading(false);
-      return;
     }
-
-    setResult(response.data || null);
-    setIsLoading(false);
   }
 
   return (
@@ -40,7 +42,7 @@ export function NotificationAdmin() {
         </CardDescription>
       </CardHeader>
       
-      <form action={handleSubmit}>
+      <form id="notification-form" action={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="title">Título</Label>
@@ -77,22 +79,6 @@ export function NotificationAdmin() {
               disabled={isLoading}
             />
           </div>
-          
-          {result && (
-            <Alert>
-              <AlertDescription>
-                ✅ Notificación enviada exitosamente a {result.sent} usuario{result.sent !== 1 ? 's' : ''}
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>
-                {error}
-              </AlertDescription>
-            </Alert>
-          )}
         </CardContent>
         
         <CardFooter>

@@ -1,4 +1,3 @@
-// app/actions/send-notification.ts
 "use server";
 
 import { z } from "zod";
@@ -6,6 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { sendPushNotification } from "@/lib/notifications/web-push";
 import { pushSubscriptions } from "@/lib/db/schema";
+import { NOTIFICATION_CONFIG } from "@/lib/config/notifications";
 import { ActionResponse } from "@/types";
 
 const notificationSchema = z.object({
@@ -62,8 +62,8 @@ export async function sendNotification(formData: FormData):Promise<ActionRespons
             title: data.title,
             body: data.message,
             url: data.url,
-            icon: "/icon-192x192.png",
-            badge: "/badge-72x72.png",
+            icon: NOTIFICATION_CONFIG.icons.default,
+            badge: NOTIFICATION_CONFIG.icons.badge,
           }
         )
       )
