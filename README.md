@@ -6,7 +6,7 @@ A modern Next.js 15 boilerplate with authentication and CRUD functionality.
 
 - Next.js 15 with App Router
 - Authentication with Better-Auth (Email + Google OAuth)
-- PostgreSQL with Drizzle ORM
+- PostgreSQL with Prisma ORM
 - Tailwind CSS + shadcn/ui
 - TypeScript
 
@@ -47,5 +47,7 @@ A modern Next.js 15 boilerplate with authentication and CRUD functionality.
 - `pnpm dev` - Development server
 - `pnpm build` - Build for production
 - `pnpm lint` - Run linter
-- `pnpm db:push` - Push database schema
-- `pnpm db:studio` - Open database studio
+- `pnpm db:generate` - Generate Prisma client
+- `pnpm db:migrate` - Run database migrations
+- `pnpm db:push` - Push database schema (without migrations)
+- `pnpm db:studio` - Open Prisma Studio
