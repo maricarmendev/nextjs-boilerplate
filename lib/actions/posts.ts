@@ -1,9 +1,7 @@
 "use server";
 
-import { db } from "@/lib/db";
-import { posts, user } from "@/lib/db/schema";
+import { prisma } from "@/lib/db";
 import { createPostSchema, updatePostSchema } from "@/lib/validations/post";
-import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -39,11 +37,14 @@ export async function createPost(formData: FormData): Promise<ActionResponse<{ i
   }
 
   try {
-    const [newPost] = await db.insert(posts).values({
-      title: validatedFields.data.title,
-      content: validatedFields.data.content,
-      userId: session.user.id,
-    }).returning({ id: posts.id });
+    const newPost = await prisma.post.create({
+      data: {
+        title: validatedFields.data.title,
+        content: validatedFields.data.content,
+        userId: session.user.id,
+      },
+      select: { id: true },
+    });
 
     revalidatePath("/");
     return { 
@@ -54,7 +55,7 @@ export async function createPost(formData: FormData): Promise<ActionResponse<{ i
     return {
       success: false,
       error: {
-        message: "Failed to create post",
+        message: error instanceof Error ? error.message : "Failed to create post",
       },
     };
   }
@@ -92,17 +93,17 @@ export async function updatePost(formData: FormData): Promise<ActionResponse> {
 
   try {
     // Only update if the post belongs to the current user
-    await db
-      .update(posts)
-      .set({
+    await prisma.post.updateMany({
+      where: {
+        id: validatedFields.data.id,
+        userId: session.user.id,
+      },
+      data: {
         title: validatedFields.data.title,
         content: validatedFields.data.content,
         updatedAt: new Date(),
-      })
-      .where(and(
-        eq(posts.id, validatedFields.data.id),
-        eq(posts.userId, session.user.id)
-      ));
+      },
+    });
 
     revalidatePath("/");
     return { success: true };
@@ -110,7 +111,7 @@ export async function updatePost(formData: FormData): Promise<ActionResponse> {
     return {
       success: false,
       error: {
-        message: "Failed to update post",
+        message: error instanceof Error ? error.message : "Failed to update post",
       },
     };
   }
@@ -132,17 +133,19 @@ export async function deletePost(id: number): Promise<ActionResponse> {
 
   try {
     // Only delete if the post belongs to the current user
-    await db.delete(posts).where(and(
-      eq(posts.id, id),
-      eq(posts.userId, session.user.id)
-    ));
+    await prisma.post.deleteMany({
+      where: {
+        id: id,
+        userId: session.user.id,
+      },
+    });
     revalidatePath("/");
     return { success: true };
   } catch (error) {
     return {
       success: false,
       error: {
-        message: "Failed to delete post",
+        message: error instanceof Error ? error.message : "Failed to delete post",
       },
     };
   }
@@ -150,23 +153,22 @@ export async function deletePost(id: number): Promise<ActionResponse> {
 
 export async function getPosts() {
   try {
-    const allPosts = await db
-      .select({
-        id: posts.id,
-        title: posts.title,
-        content: posts.content,
-        userId: posts.userId,
-        createdAt: posts.createdAt,
-        updatedAt: posts.updatedAt,
-        userName: user.name,
-        userEmail: user.email,
-      })
-      .from(posts)
-      .leftJoin(user, eq(posts.userId, user.id))
-      .orderBy(posts.createdAt);
+    const allPosts = await prisma.post.findMany({
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
     return allPosts;
   } catch (error) {
-    console.error("Failed to fetch posts:", error);
+    console.error("Failed to fetch posts:", error instanceof Error ? error.message : "Failed to fetch posts");
     return [];
   }
 }
